@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yamen Tracker</title>
+    <style>
+        :root { --primary: #00ff87; --bg: #0f172a; --card: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; padding: 20px; }
+        .container { background: var(--card); padding: 20px; border-radius: 15px; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: var(--primary); }
+        .task-item { background: #334155; margin-bottom: 10px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid #e94560; }
+        .task-item.done { border-right-color: var(--primary); opacity: 0.8; }
+        .controls { display: flex; gap: 8px; }
+        .btn { border: none; width: 35px; height: 35px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-plus { background: var(--primary); }
+        .btn-minus { background: #ef4444; color: white; }
+        #popup { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; padding: 15px 30px; border-radius: 50px; transition: 0.5s; font-weight: bold; z-index: 100; }
+        #popup.show { top: 20px; }
+    </style>
+</head>
+<body>
+    <div id="popup">مبروك يا بابا يامن! 🥳</div>
+    <div class="container">
+        <h2 id="header">لوحة مهام الأبطال</h2>
+        <div id="taskList"></div>
+    </div>
+
+<script>
+    // ********* حط رابط الديسكورد بتاعك بين علامات التنصيص هنا *********
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1495185480772354059/Ro-iCVA0N_UWWs2oWvSCfoklhXhtbQ8JN0VVXiSbZ87DlGGsjRObATpmTW-cgz9Au_6E"; 
+    // ************************************************************
+
+    let userName = localStorage.getItem('player') || prompt("اكتب اسمك عشان بابا يامن يتابعك:") || "لاعب";
+    localStorage.setItem('player', userName);
+    document.getElementById('header').innerText = `مهام البطل: ${userName}`;
+
+    const tasks = [
+        { name: "Trail 11", total: 300, current: 28 },
+        { name: "Island 10", total: 300, current: 0 },
+        { name: "Island 9", total: 300, current: 0 },
+        { name: "Hc7", total: 300, current: 60 },
+        { name: "Hc1", total: 300, current: 0 },
+        { name: "D3", total: 300, current: 0 },
+        { name: "D1", total: 300, current: 0 },
+        { name: "Mutation Battle", total: 5, current: 0 },
+        { name: "Defuse Battle", total: 5, current: 0 },
+        { name: "Zombie Siege", total: 1, current: 0 },
+        { name: "BH Hero", total: 5, current: 0 },
+        { name: "Dimensional Mutation", total: 10, current: 0 },
+        { name: "ID Rapid", total: 200, current: 100 },
+        { name: "CR Rapid", total: 200, current: 83 },
+        { name: "Mayan Rapid", total: 200, current: 0 }
+    ];
+
+    let savedData = JSON.parse(localStorage.getItem('data_' + userName)) || tasks;
+
+    function render() {
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+        savedData.forEach((t, i) => {
+            const isDone = t.current >= t.total;
+            const div = document.createElement('div');
+            div.className = `task-item ${isDone ? 'done' : ''}`;
+            div.innerHTML = `<div><b>${t.name}</b><br>${t.current}/${t.total}</div>
+                <div class="controls">
+                    <button class="btn btn-minus" onclick="change(${i},-1)">-</button>
+                    <button class="btn btn-plus" onclick="change(${i},1)">+</button>
+                </div>`;
+            list.appendChild(div);
+        });
+    }
+
+    function change(i, amt) {
+        let t = savedData[i];
+        let old = t.current;
+        t.current = Math.max(0, Math.min(t.total, t.current + amt));
+        if(t.current == t.total && old < t.total) {
+            showCongrats();
+            sendToDiscord(t.name);
+        }
+        localStorage.setItem('data_' + userName, JSON.stringify(savedData));
+        render();
+    }
+
+    function showCongrats() {
+        const p = document.getElementById('popup');
+        p.classList.add('show');
+        setTimeout(()=> p.classList.remove('show'), 3000);
+    }
+
+    function sendToDiscord(taskName) {
+        if(DISCORD_WEBHOOK_URL.includes("http")) {
+            fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ content: `🔥 البطل **${userName}** خلص مهمة **[${taskName}]**! مبروك يا بابا يامن! 🚀` })
+            });
+        }
+    }
+    render();
+</script>
+</body>
+</html>
